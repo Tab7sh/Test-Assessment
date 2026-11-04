@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.next/
+.next-test/
+test-results/
+playwright-report/
+next-env.d.ts
+*.tsbuildinfo
+.mongo-data/
+.env
+.env.local
+
