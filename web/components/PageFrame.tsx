@@ -105,15 +105,7 @@ export default function PageFrame({ html, title, initialScroll = 0, detailsState
       cb.current.onNavigate?.(href);
     };
     const onSubmit = (e: Event) => e.preventDefault();
-    let ticking = false;
-    const onScrollEvt = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        ticking = false;
-        cb.current.onScroll?.(Math.round(win.scrollY));
-      });
-    };
+    const onScrollEvt = () => cb.current.onScroll?.(Math.round(win.scrollY));
     const onOver = (e: MouseEvent) => {
       const a = anchorFrom(e.target);
       cb.current.onHover?.(a?.getAttribute('href') ?? null);

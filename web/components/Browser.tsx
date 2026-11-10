@@ -90,9 +90,8 @@ export default function Browser() {
   }, []);
 
   const onScroll = useCallback(
-    (y: number) => {
-      const key = shownRef.current?.key;
-      if (!key) return;
+    (key: string, y: number) => {
+      if (shownRef.current?.key !== key) return;
       scrollRef.current = { key, y };
       if (scrollTimer.current) clearTimeout(scrollTimer.current);
       scrollTimer.current = setTimeout(flushScroll, 150);
@@ -159,6 +158,7 @@ export default function Browser() {
   }, []);
 
   const commit = useCallback((state: NavState, entry: Entry, page?: Page, failed?: string) => {
+    flushScroll();
     navRef.current = state;
     shownRef.current = entry;
     pendingIsTraversal.current = false;
@@ -166,7 +166,7 @@ export default function Browser() {
     setView({ entry, page, failed });
     setPending(null);
     setHover(null);
-  }, []);
+  }, [flushScroll]);
 
   /** Visits are facts about arriving at an address; about: pages are not part of the web. */
   const recordVisit = useCallback((entry: Entry, via: Via, from: string | null) => {
@@ -394,10 +394,11 @@ export default function Browser() {
         : 'about';
   const person = people.find((p) => p._id === personId);
 
+  const saveViewScroll = entry ? (y: number) => onScroll(entry.key, y) : undefined;
   let content: React.ReactNode = null;
   if (entry && view?.failed) {
     content = (
-      <Scroller key={entry.key} initialScroll={0} onScroll={onScroll}>
+      <Scroller key={entry.key} initialScroll={0} onScroll={saveViewScroll}>
         <div className="internal narrow">
           <p className="eyebrow">Couldn't load</p>
           <h1 className="display">{locToString(entry.loc)}</h1>
@@ -426,14 +427,14 @@ export default function Browser() {
             detailsState={entry.details}
             onDetails={(details) => patchEntry(entry.key, { details })}
             onNavigate={followLink}
-            onScroll={onScroll}
+            onScroll={saveViewScroll}
             onHover={setHover}
           />
         </div>
       );
     } else if (loc.kind === 'site') {
       content = (
-        <Scroller key={entry.key} initialScroll={entry.scroll} onScroll={onScroll}>
+        <Scroller key={entry.key} initialScroll={entry.scroll} onScroll={saveViewScroll}>
           <Nowhere
             address={loc.address}
             onPublish={() => go({ kind: 'publish' }, 'link')}
@@ -448,7 +449,7 @@ export default function Browser() {
       );
     } else if (loc.kind === 'search') {
       content = (
-        <Scroller key={entry.key} initialScroll={entry.scroll} onScroll={onScroll}>
+        <Scroller key={entry.key} initialScroll={entry.scroll} onScroll={saveViewScroll}>
           <SearchPage
             data={entry.snapshot as SearchResponse}
             onOpen={(a) => openAddress(a, 'search')}
@@ -458,7 +459,7 @@ export default function Browser() {
       );
     } else if (loc.kind === 'history') {
       content = (
-        <Scroller key={entry.key} initialScroll={entry.scroll} onScroll={onScroll}>
+        <Scroller key={entry.key} initialScroll={entry.scroll} onScroll={saveViewScroll}>
           <HistoryPage
             key={`${entry.key}:${(entry.snapshot as HistorySnapshot).personId}`}
             data={entry.snapshot as HistorySnapshot}
@@ -472,7 +473,7 @@ export default function Browser() {
       );
     } else if (loc.kind === 'start') {
       content = (
-        <Scroller key={entry.key} initialScroll={entry.scroll} onScroll={onScroll}>
+        <Scroller key={entry.key} initialScroll={entry.scroll} onScroll={saveViewScroll}>
           <StartPage
             sites={entry.snapshot as DirectoryEntry[]}
             onOpen={(a) => openAddress(a, 'directory')}
@@ -483,14 +484,16 @@ export default function Browser() {
       );
     } else if (loc.kind === 'publish') {
       content = (
-        <Scroller key={entry.key} initialScroll={entry.scroll} onScroll={onScroll}>
+        <Scroller key={entry.key} initialScroll={entry.scroll} onScroll={saveViewScroll}>
           <PublishPage
             key={entry.key}
             draft={entry.snapshot as PublishDraft | null}
             people={people}
             personId={personId}
             onDraft={saveSnapshot}
-            onPublished={(page) => openAddress(page.address, 'publish')}
+            onPublished={(page) => {
+              if (shownRef.current?.key === entry.key) openAddress(page.address, 'publish');
+            }}
           />
         </Scroller>
       );
