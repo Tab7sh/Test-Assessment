@@ -1,0 +1,21 @@
+{
+  "name": "small-web",
+  "private": true,
+  "workspaces": [
+    "api",
+    "web"
+  ],
+  "scripts": {
+    "db": "docker compose up -d mongo",
+    "db:local": "npm run db:local --workspace api",
+    "seed": "npm run seed --workspace api",
+    "seed:reset": "npm run seed:reset --workspace api",
+    "dev:api": "npm run start:dev --workspace api",
+    "dev:web": "npm run dev --workspace web",
+    "dev": "concurrently -k -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
+    "build": "npm run build --workspace api && npm run build --workspace web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
