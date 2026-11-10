@@ -490,7 +490,9 @@ export default function Browser() {
             people={people}
             personId={personId}
             onDraft={saveSnapshot}
-            onPublished={(page) => openAddress(page.address, 'publish')}
+            onPublished={(page) => {
+              if (shownRef.current?.key === entry.key) openAddress(page.address, 'publish');
+            }}
           />
         </Scroller>
       );

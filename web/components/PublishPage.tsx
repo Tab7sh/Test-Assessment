@@ -28,7 +28,7 @@ export default function PublishPage({ draft, people, personId, onDraft, onPublis
   const [address, setAddress] = useState(draft?.address || '');
   const [title, setTitle] = useState(draft?.title || '');
   const [authorId, setAuthorId] = useState(draft?.authorId || personId || people[0]?._id || '');
-  const [html, setHtml] = useState(draft?.html || TEMPLATE);
+  const [html, setHtml] = useState(draft?.html ?? TEMPLATE);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
